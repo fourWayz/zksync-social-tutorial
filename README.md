@@ -515,7 +515,4 @@ export default async function () {
 
 Finally, run `npm run deploy` to deploy your smart contract to zkSync sepolia testnet which will output a result like the one below :
 
-![Alt text](./4w-deploy.PNG)
-
-
-
+![Alt text](./socialDapp/4w-deploy.PNG)
