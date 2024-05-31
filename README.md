@@ -19,9 +19,9 @@ A Comprehensive Guide to Creating a Decentralized Social Media Platform on zkSyn
 
 
 ## Introduction
-In this article, you will learn how to develop a decentralized social media platform. Leveraging the power of the most powerful smart contracts language, Solidity, and the user-friendly Remix IDE, we will explore the process of developing and deploying this blockchain-based social media ecosystem. 
+In this article, you will learn how to develop a decentralized social media platform. Leveraging the power of the most powerful smart contracts language, Solidity, we will explore the process of developing and deploying this blockchain-based social media ecosystem. 
 
-Throughout this guide, we will give a deep dive into the fundamental aspects of writing smart contracts. We will handle user registration, post creation, interaction mechanisms such as liking and commenting, and finally, setting up Remix for deployment on the zkSync sepolia testnet network.
+Throughout this guide, we will give a deep dive into the fundamental aspects of writing smart contracts. We will handle user registration, post creation, interaction mechanisms such as liking and commenting, and finally, setting up for deployment on the zkSync sepolia testnet network.
 
 ## Project Setup
 
