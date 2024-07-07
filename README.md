@@ -486,6 +486,147 @@ contract SocialMedia {
 }
 
 ```
+
+Now, let's go ahead and write tests for the smart contract.
+
+### Setting Up
+
+Before we dive into the individual tests, let's set up the context for our `SocialDapp` contract testing.
+
+1. **Imports and Declarations:**
+   - `expect` from `chai` is used for assertions.
+   - `getWallet`, `deployContract`, and `LOCAL_RICH_WALLETS` are utility functions and data for deploying contracts and managing wallets.
+   - `Contract` and `EventLog` from `ethers` for interacting with Ethereum smart contracts.
+   - `Wallet` from `zksync-ethers` for wallet management.
+
+2. **Test Suite Initialization:**
+   ```javascript
+   describe('SocialDapp', function () {
+     let socialMedia : Contract;
+     let user1 : Wallet;
+     let user2 : Wallet;
+     let deployer : Wallet
+
+     before(async function() {
+       user1 = getWallet(LOCAL_RICH_WALLETS[1].privateKey);
+       user2 = getWallet(LOCAL_RICH_WALLETS[2].privateKey);
+
+       socialMedia = await deployContract("SocialDapp", [], { wallet: deployer , silent: true });
+     });
+   });
+   ```
+   Here, we initialize our `SocialDapp` contract and set up `user1`, `user2`, and the `deployer` wallets.
+
+### Test: Register a User
+
+```javascript
+it('should register a user', async function () {
+  const username = 'user1';
+
+  await (socialMedia.connect(user1) as Contract).registerUser(username);
+  const user = await socialMedia.users(user1.address);
+
+  expect(user.username).to.equal(username);
+  expect(user.userAddress).to.equal(user1.address);
+  expect(user.isRegistered).to.be.true;
+
+  const events = await socialMedia.queryFilter('UserRegistered');
+  expect(events.length).to.equal(1);
+});
+```
+**Explanation:**
+- **Action:** User `user1` registers with the username 'user1'.
+- **Assertions:** 
+  - The registered user's username, address, and registration status are correctly recorded.
+  - The `UserRegistered` event is emitted once.
+
+### Test: Create a Post
+
+```javascript
+it('should create a post', async function () {
+  const content = 'This is a test post';
+  await (socialMedia.connect(user1) as Contract).createPost(content);
+  const postsCount = await socialMedia.getPostsCount();
+  expect(postsCount.toString()).to.equal('1');
+
+  const post = await socialMedia.getPost(0);
+  expect(post.author).to.equal(user1.address);
+  expect(post.content).to.equal(content);
+  expect(post.likes.toString()).to.equal('0');
+  expect(post.commentsCount.toString()).to.equal('0');
+});
+```
+**Explanation:**
+- **Action:** `user1` creates a post with the content 'This is a test post'.
+- **Assertions:**
+  - The total number of posts is incremented.
+  - The post's details (author, content, likes, comments count) are correctly recorded.
+
+### Test: Like a Post
+
+```javascript
+it('should like a post', async function () {
+  await (socialMedia.connect(user2) as Contract).registerUser('user2');
+  await (socialMedia.connect(user2) as Contract).likePost(0);
+  const post = await socialMedia.getPost(0);
+  expect(post.likes.toString()).to.equal('1');
+  expect(post.author).to.equal(user1.address);
+});
+```
+**Explanation:**
+- **Action:** `user2` registers and likes the first post (post ID 0).
+- **Assertions:**
+  - The number of likes on the post is incremented.
+  - The post's author remains correct.
+
+### Test: Add a Comment to a Post
+
+```javascript
+it('should add a comment to a post', async function () {
+  const content = 'This is a test post';
+  const commentContent = 'This is a test comment';
+
+  await (socialMedia.connect(user2) as Contract).addComment(0, commentContent);
+
+  const comment = await socialMedia.getComment(0, 0);
+  expect(comment.commenter).to.equal(user2.address);
+  expect(comment.content).to.equal(commentContent);
+
+  const post = await socialMedia.getPost(0);
+  expect(post.commentsCount.toString()).to.equal('1');
+
+  const eventsQuery = await socialMedia.queryFilter('CommentAdded');    
+  const eventData = eventsQuery[0] as EventLog;
+  const events = eventData.args;
+
+  expect(events[0]).to.equal(user2.address); // commenter
+  expect(events[1].toString()).to.equal('0'); // post ID
+  expect(events[2]).to.equal(commentContent); // comment
+});
+```
+**Explanation:**
+- **Action:** `user2` adds a comment to the first post (post ID 0).
+- **Assertions:**
+  - The comment's details (commenter, content) are correctly recorded.
+  - The post's comment count is incremented.
+  - The `CommentAdded` event is emitted with correct details.
+
+### Test: Return Correct User Details by Address
+
+```javascript
+it('should return correct user details by address', async function () {
+  const userDetails = await socialMedia.getUserByAddress(user1.address);
+  expect(userDetails.userAddress).to.equal(user1.address);
+  expect(userDetails.isRegistered).to.equal(true);
+});
+```
+**Explanation:**
+- **Action:** Retrieve the user details for `user1`.
+- **Assertions:**
+  - The returned user details (address, registration status) are correct.
+
+These tests ensure that our `SocialDapp` contract functions as expected for user registration, post creation, liking, commenting, and retrieving user details.
+
 ## Compiling and deploying
 
 To begin compiling our smart contract using `zkSync cli`, run the below command:
@@ -517,3 +658,142 @@ Finally, run `npm run deploy` to deploy your smart contract to zkSync sepolia te
 ![4w-deploy](https://github.com/fourWayz/zksync-social-tutorial/assets/157867069/6331276d-19b8-494e-bdeb-b1345756632b)
 
 
+Now, let's go ahead and write tests for the smart contract.
+
+### Setting Up
+
+Before we dive into the individual tests, let's set up the context for our `SocialDapp` contract testing.
+
+1. **Imports and Declarations:**
+   - `expect` from `chai` is used for assertions.
+   - `getWallet`, `deployContract`, and `LOCAL_RICH_WALLETS` are utility functions and data for deploying contracts and managing wallets.
+   - `Contract` and `EventLog` from `ethers` for interacting with Ethereum smart contracts.
+   - `Wallet` from `zksync-ethers` for wallet management.
+
+2. **Test Suite Initialization:**
+   ```javascript
+   describe('SocialDapp', function () {
+     let socialMedia : Contract;
+     let user1 : Wallet;
+     let user2 : Wallet;
+     let deployer : Wallet
+
+     before(async function() {
+       user1 = getWallet(LOCAL_RICH_WALLETS[1].privateKey);
+       user2 = getWallet(LOCAL_RICH_WALLETS[2].privateKey);
+
+       socialMedia = await deployContract("SocialDapp", [], { wallet: deployer , silent: true });
+     });
+   });
+   ```
+   Here, we initialize our `SocialDapp` contract and set up `user1`, `user2`, and the `deployer` wallets.
+
+### Test: Register a User
+
+```javascript
+it('should register a user', async function () {
+  const username = 'user1';
+
+  await (socialMedia.connect(user1) as Contract).registerUser(username);
+  const user = await socialMedia.users(user1.address);
+
+  expect(user.username).to.equal(username);
+  expect(user.userAddress).to.equal(user1.address);
+  expect(user.isRegistered).to.be.true;
+
+  const events = await socialMedia.queryFilter('UserRegistered');
+  expect(events.length).to.equal(1);
+});
+```
+**Explanation:**
+- **Action:** User `user1` registers with the username 'user1'.
+- **Assertions:** 
+  - The registered user's username, address, and registration status are correctly recorded.
+  - The `UserRegistered` event is emitted once.
+
+### Test: Create a Post
+
+```javascript
+it('should create a post', async function () {
+  const content = 'This is a test post';
+  await (socialMedia.connect(user1) as Contract).createPost(content);
+  const postsCount = await socialMedia.getPostsCount();
+  expect(postsCount.toString()).to.equal('1');
+
+  const post = await socialMedia.getPost(0);
+  expect(post.author).to.equal(user1.address);
+  expect(post.content).to.equal(content);
+  expect(post.likes.toString()).to.equal('0');
+  expect(post.commentsCount.toString()).to.equal('0');
+});
+```
+**Explanation:**
+- **Action:** `user1` creates a post with the content 'This is a test post'.
+- **Assertions:**
+  - The total number of posts is incremented.
+  - The post's details (author, content, likes, comments count) are correctly recorded.
+
+### Test: Like a Post
+
+```javascript
+it('should like a post', async function () {
+  await (socialMedia.connect(user2) as Contract).registerUser('user2');
+  await (socialMedia.connect(user2) as Contract).likePost(0);
+  const post = await socialMedia.getPost(0);
+  expect(post.likes.toString()).to.equal('1');
+  expect(post.author).to.equal(user1.address);
+});
+```
+**Explanation:**
+- **Action:** `user2` registers and likes the first post (post ID 0).
+- **Assertions:**
+  - The number of likes on the post is incremented.
+  - The post's author remains correct.
+
+### Test: Add a Comment to a Post
+
+```javascript
+it('should add a comment to a post', async function () {
+  const content = 'This is a test post';
+  const commentContent = 'This is a test comment';
+
+  await (socialMedia.connect(user2) as Contract).addComment(0, commentContent);
+
+  const comment = await socialMedia.getComment(0, 0);
+  expect(comment.commenter).to.equal(user2.address);
+  expect(comment.content).to.equal(commentContent);
+
+  const post = await socialMedia.getPost(0);
+  expect(post.commentsCount.toString()).to.equal('1');
+
+  const eventsQuery = await socialMedia.queryFilter('CommentAdded');    
+  const eventData = eventsQuery[0] as EventLog;
+  const events = eventData.args;
+
+  expect(events[0]).to.equal(user2.address); // commenter
+  expect(events[1].toString()).to.equal('0'); // post ID
+  expect(events[2]).to.equal(commentContent); // comment
+});
+```
+**Explanation:**
+- **Action:** `user2` adds a comment to the first post (post ID 0).
+- **Assertions:**
+  - The comment's details (commenter, content) are correctly recorded.
+  - The post's comment count is incremented.
+  - The `CommentAdded` event is emitted with correct details.
+
+### Test: Return Correct User Details by Address
+
+```javascript
+it('should return correct user details by address', async function () {
+  const userDetails = await socialMedia.getUserByAddress(user1.address);
+  expect(userDetails.userAddress).to.equal(user1.address);
+  expect(userDetails.isRegistered).to.equal(true);
+});
+```
+**Explanation:**
+- **Action:** Retrieve the user details for `user1`.
+- **Assertions:**
+  - The returned user details (address, registration status) are correct.
+
+These tests ensure that our `SocialDapp` contract functions as expected for user registration, post creation, liking, commenting, and retrieving user details.
